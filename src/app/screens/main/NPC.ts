@@ -35,11 +35,11 @@ export class NPC extends Container {
   }
 
   private drawDebug() {
-    // if (!this.showDebug) return;
+    if (!this.showDebug) return;
 
     this.debugGraphics.clear();
-    // this.debugGraphics.circle(0, 0, this.collisionRadius);
-    // this.debugGraphics.stroke({ width: 2, color: 0xff0000 });
+    this.debugGraphics.circle(0, 0, this.collisionRadius);
+    this.debugGraphics.stroke({ width: 2, color: 0xff0000 });
   }
 
   public setDebugMode(enabled: boolean) {

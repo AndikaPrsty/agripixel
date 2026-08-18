@@ -117,17 +117,17 @@ export class CharacterController extends Container {
   }
 
   private drawDebug() {
-    // if (!this.showDebug) return;
+    if (!this.showDebug) return;
 
     this.debugGraphics.clear();
-    // this.debugGraphics.circle(0, 0, this.collisionRadius);
-    // this.debugGraphics.stroke({ width: 2, color: 0xff0000 });
+    this.debugGraphics.circle(0, 0, this.collisionRadius);
+    this.debugGraphics.stroke({ width: 2, color: 0xff0000 });
 
     for (const collider of this.colliders) {
       const dx = collider.x - this.x;
       const dy = collider.y - this.y;
-      // this.debugGraphics.circle(dx, dy, this.collisionRadius);
-      // this.debugGraphics.stroke({ width: 2, color: 0xff0000 });
+      this.debugGraphics.circle(dx, dy, this.collisionRadius);
+      this.debugGraphics.stroke({ width: 2, color: 0xff0000 });
     }
   }
 
