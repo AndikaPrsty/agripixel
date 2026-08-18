@@ -8,8 +8,8 @@ import { engine } from "../../getEngine";
 import { PausePopup } from "../../popups/PausePopup";
 import { SettingsPopup } from "../../popups/SettingsPopup";
 import { Button } from "../../ui/Button";
-
-import { Bouncer } from "./Bouncer";
+import { CharacterController } from "./CharacterController";
+import { NPC } from "./NPC";
 
 /** The screen that holds the app */
 export class MainScreen extends Container {
@@ -19,17 +19,36 @@ export class MainScreen extends Container {
   public mainContainer: Container;
   private pauseButton: FancyButton;
   private settingsButton: FancyButton;
-  private addButton: FancyButton;
-  private removeButton: FancyButton;
-  private bouncer: Bouncer;
+  private debugButton: FancyButton;
+  private character: CharacterController;
+  private npcs: NPC[] = [];
   private paused = false;
+  private debugMode = false;
 
   constructor() {
     super();
 
-    this.mainContainer = new Container();
+    // ponytail: sortableChildren = true is required for sortChildren() to actually
+    // re-order the render. Without it, sortChildren mutates zIndex but the
+    // renderer ignores it and keeps add-index order. Enable once at construction.
+    this.mainContainer = new Container({ sortableChildren: true });
     this.addChild(this.mainContainer);
-    this.bouncer = new Bouncer();
+    this.character = new CharacterController();
+    this.mainContainer.addChild(this.character);
+
+    const npcConfigs = [
+      { x: 100, y: 50, direction: "left" },
+      { x: -80, y: -60, direction: "right" },
+      { x: 120, y: -40, direction: "back" },
+      { x: -100, y: 80, direction: "front" },
+    ];
+
+    for (let i = 0; i < npcConfigs.length; i++) {
+      const npc = new NPC();
+      this.npcs.push(npc);
+      this.mainContainer.addChild(npc);
+      this.character.addCollider(npc);
+    }
 
     const buttonAnimations = {
       hover: {
@@ -65,21 +84,14 @@ export class MainScreen extends Container {
     );
     this.addChild(this.settingsButton);
 
-    this.addButton = new Button({
-      text: "Add",
-      width: 175,
-      height: 110,
+    this.debugButton = new Button({
+      text: "Debug: OFF",
+			fontSize: 16,
+      width: 120,
+      height: 50,
     });
-    this.addButton.onPress.connect(() => this.bouncer.add());
-    this.addChild(this.addButton);
-
-    this.removeButton = new Button({
-      text: "Remove",
-      width: 175,
-      height: 110,
-    });
-    this.removeButton.onPress.connect(() => this.bouncer.remove());
-    this.addChild(this.removeButton);
+    this.debugButton.onPress.connect(() => this.toggleDebugMode());
+    this.addChild(this.debugButton);
   }
 
   /** Prepare the screen just before showing */
@@ -89,7 +101,26 @@ export class MainScreen extends Container {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public update(_time: Ticker) {
     if (this.paused) return;
-    this.bouncer.update();
+    this.character.update();
+    this.sortEntitiesByDepth();
+  }
+
+  private sortEntitiesByDepth() {
+    // ponytail: PixiJS v8 sortChildren() takes no args — it sorts by zIndex only.
+    // So we copy y -> zIndex each frame on every child. sortableChildren + the
+    // zIndex setter auto-flag sortDirty, so the renderer re-sorts on next render.
+    for (const child of this.mainContainer.children) {
+      child.zIndex = child.y;
+    }
+  }
+
+  private toggleDebugMode() {
+    this.debugMode = !this.debugMode;
+    this.character.setDebugMode(this.debugMode);
+    for (const npc of this.npcs) {
+      npc.setDebugMode(this.debugMode);
+    }
+    this.debugButton.text = this.debugMode ? "Debug: ON" : "Debug: OFF";
   }
 
   /** Pause gameplay - automatically fired when a popup is presented */
@@ -118,24 +149,38 @@ export class MainScreen extends Container {
     this.pauseButton.y = 30;
     this.settingsButton.x = width - 30;
     this.settingsButton.y = 30;
-    this.removeButton.x = width / 2 - 100;
-    this.removeButton.y = height - 75;
-    this.addButton.x = width / 2 + 100;
-    this.addButton.y = height - 75;
+    this.debugButton.x = width / 2;
+    this.debugButton.y = 30;
 
-    this.bouncer.resize(width, height);
+    this.character.x = 0;
+    this.character.y = 0;
+
+    const npcConfigs = [
+      { x: 100, y: 50 },
+      { x: -80, y: -60 },
+      { x: 120, y: -40 },
+      { x: -100, y: 80 },
+    ];
+
+    for (let i = 0; i < this.npcs.length; i++) {
+      this.npcs[i].x = npcConfigs[i].x;
+      this.npcs[i].y = npcConfigs[i].y;
+    }
   }
 
   /** Show screen with animations */
   public async show(): Promise<void> {
     engine().audio.bgm.play("main/sounds/bgm-main.mp3", { volume: 0.5 });
 
-    const elementsToAnimate = [
-      this.pauseButton,
-      this.settingsButton,
-      this.addButton,
-      this.removeButton,
-    ];
+    await this.character.init();
+
+    const npcDirections = ["left", "right", "back", "front"];
+    for (let i = 0; i < this.npcs.length; i++) {
+      await this.npcs[i].init();
+      this.npcs[i].setDirection(npcDirections[i]);
+    }
+
+    const elementsToAnimate = [this.pauseButton, this.settingsButton];
 
     let finalPromise!: AnimationPlaybackControls;
     for (const element of elementsToAnimate) {
@@ -148,7 +193,6 @@ export class MainScreen extends Container {
     }
 
     await finalPromise;
-    this.bouncer.show(this);
   }
 
   /** Hide screen with animations */
