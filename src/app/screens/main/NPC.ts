@@ -3,7 +3,7 @@ import { AnimatedSprite, Container, Assets, Texture, Graphics } from "pixi.js";
 export class NPC extends Container {
   private sprite!: AnimatedSprite;
   private animations: Record<string, Texture[]> = {};
-  private direction = "front";
+  direction = "front";
   private debugGraphics: Graphics;
   private collisionRadius = 12;
   private showDebug = false;

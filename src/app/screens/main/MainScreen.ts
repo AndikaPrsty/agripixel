@@ -86,7 +86,7 @@ export class MainScreen extends Container {
 
     this.debugButton = new Button({
       text: "Debug: OFF",
-			fontSize: 16,
+      fontSize: 16,
       width: 120,
       height: 50,
     });
