@@ -1,6 +1,8 @@
 import { AnimatedSprite, Container, Assets, Texture, Graphics } from "pixi.js";
 
-export class CharacterController extends Container {
+import type { Debug } from "./Debug";
+
+export class CharacterController extends Container implements Debug {
   private sprite!: AnimatedSprite;
   private keys: Record<string, boolean> = {};
   private speed = 3;
@@ -26,7 +28,7 @@ export class CharacterController extends Container {
     this.colliders.push(collider);
   }
 
-  public setDebugMode(enabled: boolean) {
+  public setDebugMode(enabled: boolean): void {
     this.showDebug = enabled;
     this.debugGraphics.clear();
   }

@@ -1,6 +1,8 @@
 import { AnimatedSprite, Container, Assets, Texture, Graphics } from "pixi.js";
 
-export class NPC extends Container {
+import type { Debug } from "./Debug";
+
+export class NPC extends Container implements Debug {
   private sprite!: AnimatedSprite;
   private animations: Record<string, Texture[]> = {};
   direction = "front";
@@ -42,7 +44,7 @@ export class NPC extends Container {
     this.debugGraphics.stroke({ width: 2, color: 0xff0000 });
   }
 
-  public setDebugMode(enabled: boolean) {
+  public setDebugMode(enabled: boolean): void {
     this.showDebug = enabled;
     this.debugGraphics.clear();
   }
