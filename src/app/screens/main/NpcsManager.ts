@@ -1,5 +1,3 @@
-import { Container } from "pixi.js";
-
 import type { CharacterController } from "./CharacterController";
 import type { Debug } from "./Debug";
 import { NPC } from "./NPC";
@@ -19,18 +17,22 @@ const NPC_SPAWNS: readonly NpcSpawn[] = [
 
 /**
  * Owns the NPC population, their spawn layout, and their debug toggle.
- * Lives as a child of the world container so the depth-sort sees them.
+ *
+ * Not a Container — the manager itself never appears in the scene graph.
+ * NPCs are added directly to the world container so the depth sort
+ * sees them as siblings of the player.
  */
-export class NpcsManager extends Container implements Debug {
+export class NpcsManager implements Debug {
   private readonly npcs: NPC[] = [];
 
-  constructor(private readonly character: CharacterController) {
-    super();
-
+  constructor(
+    private readonly character: CharacterController,
+    private readonly host: { addChild: (child: NPC) => void },
+  ) {
     for (let i = 0; i < NPC_SPAWNS.length; i++) {
       const npc = new NPC();
       this.npcs.push(npc);
-      this.addChild(npc);
+      this.host.addChild(npc);
       this.character.addCollider(npc);
     }
   }

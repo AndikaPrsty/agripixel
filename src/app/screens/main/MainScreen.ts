@@ -26,10 +26,10 @@ export class MainScreen extends Container {
     super();
 
     this.character = new CharacterController();
-    this.npcs = new NpcsManager(this.character);
+    this.world.addChild(this.character);
+    this.npcs = new NpcsManager(this.character, this.world);
     this.hud = new Hud((enabled) => this.setDebugMode(enabled));
 
-    this.world.addChild(this.character, this.npcs);
     this.addChild(this.world, this.hud);
 
     this.debugables.push(this.character, this.npcs);
